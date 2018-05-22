@@ -4,8 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import it.polito.tdp.porto.model.Author;
+import it.polito.tdp.porto.model.AuthorIdMap;
 import it.polito.tdp.porto.model.Paper;
 
 public class PortoDAO {
@@ -65,4 +68,83 @@ public class PortoDAO {
 			throw new RuntimeException("Errore Db");
 		}
 	}
+	
+	/*
+	 * OTTENGO TUTTI GLI AUTORI
+	 */
+	public List<Author> getAutori(AuthorIdMap aMap) {
+
+		final String sql = "SELECT * FROM author";
+		List<Author> result = new ArrayList<Author>();
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while(rs.next()) {
+				Author autore = new Author(rs.getInt("id"), rs.getString("lastname"), rs.getString("firstname"));
+				result.add(aMap.get(autore));
+			}
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+		}
+		return result;
+	}
+	
+	
+	/*
+	 * Dato l'id ottengo Tutti i coautori.
+	 */
+	public List<Author> getCoAutoriFromId(int id,AuthorIdMap aMap) {  //SFRUTTA SQL PER L'ELABORAZIONE
+
+		final String sql = "SELECT DISTINCT authorid FROM CREATOR WHERE eprintid IN(SELECT eprintid FROM CREATOR WHERE authorid=?) AND authorid <>?";
+		List<Author> result= new ArrayList<Author>();
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, id);
+			st.setInt(2, id);
+
+			ResultSet rs = st.executeQuery();
+
+			while(rs.next()) {
+				int aId=rs.getInt("authorid");
+				Author autore = new Author(aId, aMap.getAuthor(aId).getFirstname(), aMap.getAuthor(aId).getLastname());
+				result.add(autore);
+			}
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+		}
+		return result;
+	}
+
+	public boolean checkConn(Author a, Author autore) {
+		final String sql = "SELECT DISTINCT authorid FROM CREATOR WHERE eprintid IN(SELECT eprintid FROM CREATOR WHERE authorid=?) AND authorid=?";
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, a.getId());
+			st.setInt(2, autore.getId());
+
+			ResultSet rs = st.executeQuery();
+
+			if(rs.next()&&autore.getId()==rs.getInt("authorid")) {
+				st.close();
+				rs.close();
+				conn.close();
+				return true;
+			}
+			st.close();
+			rs.close();
+			conn.close();	
+			return false;
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+		}
+	}
+
 }
