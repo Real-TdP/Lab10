@@ -58,8 +58,14 @@ public class PortoDAO {
 			if (rs.next()) {
 				Paper paper = new Paper(rs.getInt("eprintid"), rs.getString("title"), rs.getString("issn"),
 						rs.getString("publication"), rs.getString("type"), rs.getString("types"));
+				st.close();
+				rs.close();
+				conn.close();
 				return paper;
 			}
+			st.close();
+			rs.close();
+			conn.close();
 
 			return null;
 
@@ -85,6 +91,10 @@ public class PortoDAO {
 				Author autore = new Author(rs.getInt("id"), rs.getString("lastname"), rs.getString("firstname"));
 				result.add(aMap.get(autore));
 			}
+			
+			st.close();
+			rs.close();
+			conn.close();
 		} catch (SQLException e) {
 			// e.printStackTrace();
 			throw new RuntimeException("Errore Db");
@@ -145,6 +155,31 @@ public class PortoDAO {
 			// e.printStackTrace();
 			throw new RuntimeException("Errore Db");
 		}
+	}
+	
+	public Paper getArtic(Author a,Author b) {
+		final String sql="SELECT C1.eprintid FROM creator as C1, creator as C2 WHERE C1.eprintid=C2.eprintid AND C1.authorid=? AND C2.authorid=? LIMIT 1";
+		Paper articolo=null;
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, a.getId());
+			st.setInt(2, b.getId());
+
+			ResultSet rs = st.executeQuery();
+
+			if(rs.next())
+				articolo=this.getArticolo(rs.getInt("eprintid"));
+				
+			st.close();
+			rs.close();
+			conn.close();	
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+		}
+		
+		return articolo;
 	}
 
 }

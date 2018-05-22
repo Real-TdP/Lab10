@@ -56,6 +56,7 @@ public class PortoController {
     		return;
     	}
     	txtResult.clear();
+    	txtResult.appendText(model.sequenzaArticoli(boxPrimo.getValue(), boxSecondo.getValue()));
     	
 
     }

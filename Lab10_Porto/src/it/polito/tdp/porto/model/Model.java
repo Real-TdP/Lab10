@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.Graphs;
+import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
 
@@ -85,6 +88,34 @@ public class Model {
 		if(pDAO.checkConn(a,autore))
 			return true;
 		return false;
+	}
+	
+	public String sequenzaArticoli(Author a1,Author a2) {
+		List<Author> cammino = this.shortPath(a1, a2);
+		Paper articolo;
+		StringBuilder sb= new StringBuilder("Elenco aticoli collegati: \n\n");
+		for(int i=0;i<cammino.size()-1;i++) {
+			articolo=pDAO.getArtic(cammino.get(i),cammino.get(i+1));
+			if(articolo!=null)
+				sb.append("Articolo "+(i+1)+": "+articolo.getTitle()+"\n");
+			else {
+				sb.append("Nesunn collegamento trovato, termino.\n");
+				break;
+			}
+				
+		}
+		
+		
+		
+		
+		return sb.toString();
+	}
+	
+	private List<Author> shortPath(Author source,Author destination) {
+		
+		ShortestPathAlgorithm<Author,DefaultEdge> spa = new DijkstraShortestPath<Author, DefaultEdge>(graph);
+		GraphPath<Author,DefaultEdge> gp = spa.getPath(source, destination);
+		return gp.getVertexList();
 	}
 	
 
